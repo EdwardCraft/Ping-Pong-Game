@@ -6,7 +6,7 @@ var port = process.env.PORT || 3000;
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 10;
-const WIN_SCORE = 1;
+const WIN_SCORE = 100;
 
 var framesPerScond = 30;
 var velocityX = 10;
@@ -21,7 +21,8 @@ var canvasHeight;
 
 var startMoving = false;
 var socketPong;
-var SOCKET_BALLS = {};
+
+var PLAYER_SOCKETS = [];
 
 var players = [];
 var numPlayers = 0;
@@ -29,7 +30,6 @@ var facing = false;
 
 var scoreLeft = 0;
 var scoreRight = 0;
-var socketScore = [];
 var endGame = false;
 
 
@@ -69,18 +69,13 @@ function pongLogin(socket){
 		data.id = socket.id;
 		socket.broadcast.emit('playerMove', data);
 		for(var i = 0; i < players.length; i++){
-			if(players[i].id == data.id){
-				players[i].x = data.x;
-				players[i].y = data.y;
-			}
+			if(players[i] != null)
+				if(players[i].id == data.id){
+					players[i].x = data.x;
+					players[i].y = data.y;
+				}
 		}
-
 	});
-
-
-
-	SOCKET_BALLS[numPlayers] = socket;
-	
 
 	socket.on('start ball position', function(data){
 		ballX = data.ballX;
@@ -95,15 +90,53 @@ function pongLogin(socket){
 	
 	socket.on('restart game',function(data){
 		for(var i = 0; i < players.length; i++){
-			if(players[i].id == data.id){
-				players[i].winner = data.winner;
-			} 
+			if(players[i] != null)
+				if(players[i].id == data.id){
+					players[i].winner = data.winner;
+				} 
 		}
 	});
 
+	socket.on('disconnect', function(){
+		console.log('player disconnected :'+ socket.id);
+		numPlayers -= 1;
+		socket.broadcast.emit('playerDisconnected',{id: socket.id});
+		for(var i = 0; i < players.length ; i++ ){
+			if(players[i] != null){
+				if(players[i].id == socket.id){
+	 				players[i] = null;
+	 				break
+	 			}
+			}
+	 	}
+	 	for(var i = 0; i < players.length; i++ ){
+	 		players[i] = players[i + 1];
+	 	}
+	 	console.log('array size before: ' + players.length);
+	 	players.length -= 1;
+	 	console.log('array size after: ' + players.length);
+	 	emptyArray(players);
+
+
+	 	for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+	 		if(PLAYER_SOCKETS[i] != null){
+	 			if(PLAYER_SOCKETS[i].id == socket.id){
+	 				PLAYER_SOCKETS[i] = null;
+	 				break;
+	 			}
+	 		}
+	 	}
+	 	for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+	 		PLAYER_SOCKETS[i] = PLAYER_SOCKETS[i + 1];
+	 	}
+	 	
+	 	PLAYER_SOCKETS.length -= 1;
+	 	emptyArray(PLAYER_SOCKETS);
+
+	});
 
 	
-	socketScore.push(socket);
+	PLAYER_SOCKETS.push(socket);
 	players.push(new player(socket.id, 0, 0, facing));
 
 
@@ -121,24 +154,32 @@ setInterval(
 
 function update(){
 		
+		
+
+
 		if(endGame)restartGame();
 		if(!startMoving)return;
 
-		ballX += velocityX;
-		ballY += velocityY;
+		if(numPlayers > 1){
+			ballX += velocityX;
+			ballY += velocityY;
+		}
 		
-	
+		console.log("state: " + startMoving);
+
 		if(ballX  < 0){
 			var hit = false;
 			for(var i = 0; i < players.length; i++){
-				if(players[i].left){
-					if(collisionPaddle(players[i].y)){
-						console.log('Player id: ' + players[i].id + 'hit padele');
-						hit = true;
-						velocityX = -velocityX;
-						var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));
-						velocityY = deltaY * 0.35;
-						break;
+				if(players[i] != null){
+					if(players[i].left){
+						if(collisionPaddle(players[i].y)){
+							console.log('Player id: ' + players[i].id + 'hit padele');
+							hit = true;
+							velocityX = -velocityX;
+							var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));
+							velocityY = deltaY * 0.35;
+							break;
+						}
 					}
 				}
 			}
@@ -146,9 +187,10 @@ function update(){
 			if(!hit){
 				scoreRight++;
 					
-				for(var i = 0; i < socketScore.length; i++){
-					var socket = socketScore[i];
-					socket.emit('score right',{score: scoreRight});
+				for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+					var socket = PLAYER_SOCKETS[i];
+					if(socket != null)
+						socket.emit('score right',{score: scoreRight});
 				}
 
 				resetBall();
@@ -160,14 +202,16 @@ function update(){
 		if(ballX >= canvasWidth){
 			var hit = false;
 			for(var i = 0; i < players.length; i++){
-				if(!players[i].left){
-					if(collisionPaddle(players[i].y)){
-						console.log('Player id: ' + players[i].id + 'hit padele');
-						hit = true;
-						velocityX = -velocityX;
-						var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));
-						velocityY = deltaY * 0.35;
-						break;
+				if(players[i] != null){
+					if(!players[i].left){
+						if(collisionPaddle(players[i].y)){
+							console.log('Player id: ' + players[i].id + 'hit padele');
+							hit = true;
+							velocityX = -velocityX;
+							var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));
+							velocityY = deltaY * 0.35;
+							break;
+						}
 					}
 				}
 			}
@@ -175,9 +219,10 @@ function update(){
 			if(!hit){
 				scoreLeft++;
 
-				for(var i = 0; i < socketScore.length; i++){
-					var socket = socketScore[i];
-					socket.emit('score left',{score: scoreLeft});
+				for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+					var socket = PLAYER_SOCKETS[i];
+					if(socket != null)
+						socket.emit('score left',{score: scoreLeft});
 				}
 				
 				resetBall();
@@ -198,21 +243,24 @@ function update(){
 
 
 
-		for(var i in SOCKET_BALLS){
-			var socket = SOCKET_BALLS[i];
-			socket.emit('ballPosition',{
-				x:ballX, 
-				y:ballY
-			});
-			
-		}
+		
 
-
+		ballPosition();
 		checkWinner();
 
 }
 
 
+function ballPosition(){
+	for(var i  = 0; i < PLAYER_SOCKETS.length; i++){
+		var socket = PLAYER_SOCKETS[i];
+		if(socket != null)
+			socket.emit('ballPosition',{
+				x:ballX, 
+				y:ballY
+			});
+	}
+}
 
 function chatLogin(socket){
 	console.log('a user conneted chat');
@@ -281,26 +329,32 @@ function chatLogin(socket){
 
 
 function player(id, x, y, facing){
+
 	this.id = id;
 	this.x = x;
 	this.y = y;
 	this.left = facing;
 	this.winner = false;
-
 }
 
-function emptyArray(){
+function emptyArray(array){
 	if(numPlayers == 0){
-	   	players.length = 0; // good!
+	   	array.length = 0; // good!
+	   	startMoving = false;
+
  	}
 
 }
 
 
 function collisionPaddle(paddleY){
+	/*console.log('Ball Y: '+ ballY);
+	console.log('paddleY: ' + paddleY);*/
 	if(ballY > paddleY && ballY < (paddleY + PADDLE_HEIGHT)){
 		return true;
-	}else return false;
+	}
+
+	return false;
 
 }
 
@@ -314,33 +368,36 @@ function resetBall(){
 
 function checkWinner(){
 
-
-
 	if((scoreLeft >= WIN_SCORE) || (scoreRight >= WIN_SCORE)){
 		if(scoreLeft > scoreRight){
-			for(var i = 0; i < socketScore.length; i++){
-					var socket = socketScore[i];
-					socket.emit('winner',{winer: 'LEFT'});
+			for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+					var socket = PLAYER_SOCKETS[i];
+					if(socket != null)
+						socket.emit('winner',{winer: 'LEFT'});
 			}
 		}else{
-			for(var i = 0; i < socketScore.length; i++){
-					var socket = socketScore[i];
-					socket.emit('winner',{winer: 'RIGHT'});
+			for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+					var socket = PLAYER_SOCKETS[i];
+					if(socket != null)
+						socket.emit('winner',{winer: 'RIGHT'});
 			}
 		}	
 
 		scoreLeft = 0;
 		scoreRight = 0;
 
-		for(var i = 0; i < socketScore.length; i++){
-			var socket = socketScore[i];
-			socket.emit('score right',{score: scoreRight});
-			socket.emit('score left',{score: scoreLeft});
+		for(var i = 0; i < PLAYER_SOCKETS.length; i++){
+			var socket = PLAYER_SOCKETS[i];
+			if(socket != null){
+				socket.emit('score right',{score: scoreRight});
+				socket.emit('score left',{score: scoreLeft});
+			}
 		}
 
 
 		for(var i = 0; i < players.length; i++){
-			players[i].winner = true;
+			if(players[i] != null)
+				players[i].winner = true;
 		}
 		
 		startMoving = false;
@@ -353,8 +410,10 @@ function checkWinner(){
 function restartGame(){
 	var key = 0;
 	for(var i = 0; i < players.length; i++){
-		if(players[i].winner == false ){
+		if(players[i] != null){
+			if(players[i].winner == false ){
 				key++;	
+			}
 		}
 	}
 		
