@@ -107,36 +107,41 @@ function sockets(){
 	socket.emit('canvas dimensions', {width: canvas.width, height: canvas.height});
 
 	socket.on('socketID', function(data){
-		setPlayer(data.left, data.id);
-		console.log("Player id: "+data.id+' left: '+data.left);
-	}).on('newPlayer',function(data){
-		setPlayers(data.left, data.id);
-	
-	}).on('getPlayers', function(data){
-		
-		for(var i = 0; i < data.length; i++){
-			var player = new Object(); 
-			player.id = data[i].id;
-			
-			if(!data[i].left){
-				player.x = canvas.width - PADDLE_WIDTH;
-				player.y = data[i].y;
-				player.left = data[i].left;
-			}else{
-				player.x = 0;
-				player.y = data[i].y;
-				player.left = data[i].left;
-			}
-
-			players[numPlayers++] = player;
+		if(data != null){
+			setPlayer(data.left, data.id);
+			console.log("Player id: "+data.id+' left: '+data.left);
 		}
+	}).on('newPlayer',function(data){
+		if(data != null){
+			setPlayers(data.left, data.id);
+		}
+	}).on('getPlayers', function(data){
+		if(data != null){
+			for(var i = 0; i < data.length; i++){
+				var player = new Object(); 
+				player.id = data[i].id;
+				
+				if(!data[i].left){
+					player.x = canvas.width - PADDLE_WIDTH;
+					player.y = data[i].y;
+					player.left = data[i].left;
+				}else{
+					player.x = 0;
+					player.y = data[i].y;
+					player.left = data[i].left;
+				}
 
+				players[numPlayers++] = player;
+			}
+		}
 	}).on('playerMove',function(data){
-		for(var i = 0 in players){
-			if(players[i].id == data.id){
-				if(players[i].id != null){
-					players[i].x = data.x;
-					players[i].y = data.y;
+		if(data != null){
+			for(var i = 0 in players){
+				if(players[i].id == data.id){
+					if(players[i].id != null){
+						players[i].x = data.x;
+						players[i].y = data.y;
+					}
 				}
 			}
 		}
@@ -146,15 +151,23 @@ function sockets(){
 
 
 	socket.on('ballPosition', function(data){
-		ballX = data.x;
-		ballY = data.y;
+		if(data != null){
+			ballX = data.x;
+			ballY = data.y;
+		}	
 	}).on('score right', function(data){
-		scoreRight = data.score;
+		if(data != null){
+			scoreRight = data.score;
+		}
 	}).on('score left', function(data){
-		scoreLeft = data.score;
+		if(data != null){
+			scoreLeft = data.score;
+		}
 	}).on('winner', function(data){
-		winnerState = true;
-		theWinner = data.winer;
+		if(data != null){
+			winnerState = true;
+			theWinner = data.winer;
+		}
 	});
 
 
