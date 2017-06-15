@@ -137,14 +137,41 @@ function sockets(){
 	}).on('playerMove',function(data){
 		if(data != null){
 			for(var i = 0 in players){
-				if(players[i].id == data.id){
-					if(players[i].id != null){
-						players[i].x = data.x;
-						players[i].y = data.y;
+				if(players[i] != null){
+					if(players[i].id == data.id){
+						if(players[i].id != null){
+							players[i].x = data.x;
+							players[i].y = data.y;
+						}
 					}
 				}
 			}
 		}
+	}).on('playerDisconnected', function(data){
+		var id = data.id;
+		for(var i = 0 in players){
+			if(players[i].id == id){
+				console.log('player disconnected: ' +  players[i].id);
+				players[i] = null;
+				break;
+			}
+		}
+
+		var key = 0;
+		for(var i = 0 ; i < numPlayers; i++){
+			if(players[i] == null && key == 0){
+				key = 1;
+			}
+			if(key == 1){
+				players[i] = players[i + 1];
+			}
+		}
+		
+		numPlayers--;
+		for(var i = 0; i < numPlayers; i++){
+			console.log('players['+i+']: '+players[i].id);
+		}
+
 	});
 
 
@@ -279,9 +306,10 @@ function renderPlayers(){
 	if(player != null)
 		colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
 
-	for(var i = 0 in players){
+	for(var i = 0; i < numPlayers; i++){
 		var otherPlayer = players[i];
-		colorRect( otherPlayer.x, otherPlayer.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		if(otherPlayer != null)
+			colorRect( otherPlayer.x, otherPlayer.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
 	}
 
 }

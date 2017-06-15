@@ -109,8 +109,14 @@ function pongLogin(socket){
 	 			}
 			}
 	 	}
+	 	var key = 0;
 	 	for(var i = 0; i < players.length; i++ ){
-	 		players[i] = players[i + 1];
+	 		if(players[i] == null && key == 0){
+	 			key = 1;
+	 		}
+	 		if(key == 1){
+	 			players[i] = players[i + 1];
+	 		}
 	 	}
 	 	console.log('array size before: ' + players.length);
 	 	players.length -= 1;
@@ -126,8 +132,17 @@ function pongLogin(socket){
 	 			}
 	 		}
 	 	}
+
+	 	var key = 0;
 	 	for(var i = 0; i < PLAYER_SOCKETS.length; i++){
-	 		PLAYER_SOCKETS[i] = PLAYER_SOCKETS[i + 1];
+	 		if(PLAYER_SOCKETS[i] == null && key == 0){
+	 			key = 1;
+	 		}
+
+	 		if(key == 1){
+				PLAYER_SOCKETS[i] = PLAYER_SOCKETS[i + 1];
+	 		}
+	 		
 	 	}
 	 	
 	 	PLAYER_SOCKETS.length -= 1;
@@ -165,8 +180,6 @@ function update(){
 			ballY += velocityY;
 		}
 		
-		console.log("state: " + startMoving);
-
 		if(ballX  < 0){
 			var hit = false;
 			for(var i = 0; i < players.length; i++){
@@ -260,70 +273,6 @@ function ballPosition(){
 				y:ballY
 			});
 	}
-}
-
-function chatLogin(socket){
-	console.log('a user conneted chat');
-	var addedUser = false;
-	
-	socket.on('chat message', function(msg){
-		//io.emit('chat message', msg);
-		socket.broadcast.emit('chat message', {
-			username: socket.username,
-			message: data
-		});
-	});
-
-	//when the client emits 'add user' this listens abd execute
-	socket.on('add user', function(username){
-		if(addedUser)return;
-
-		//we store the username in the socket session for this client
-		socket.username = username;
-		addedUser = true;
-		++numUsers;
-		socket.emit('login', {
-			numUsers: numUsers
-		});
-
-
-		//echo globally (all clients) tat a person has connected
-		socket.broadcast.emit('user joined', {
-			username: socket.username,
-			numUsers: numUsers
-		});
-
-	});
-
-
-	//when the  client  emits 'typing', we  broadcast in to  others
-	socket.on('typing',function(){
-		socket.broadcast.emit('typing', {
-			username: socket.username
-		});
-	});
-
-	//when the client  emits 'stop typing', we  broadcast in to  others
-	socket.on('stop typing', function(){
-		socket.broadcast.emit('stop typing', {
-			username: socket.username
-		});
-	});
-
-
-
-	socket.on('disconnect', function(){
-		if(addedUser){
-			--numUsers;
-			//echo globally that this client has left
-			socket.broadcast.emit('user left',{
-				username: socket.username,
-				numUsers: numUsers
-			});
-		}
-	});
-	
-
 }
 
 
@@ -422,6 +371,70 @@ function restartGame(){
 		startMoving = true;
 	}
 	
+}
 
+
+function chatLogin(socket){
+	console.log('a user conneted chat');
+	var addedUser = false;
+	
+	socket.on('chat message', function(msg){
+		//io.emit('chat message', msg);
+		socket.broadcast.emit('chat message', {
+			username: socket.username,
+			message: data
+		});
+	});
+
+	//when the client emits 'add user' this listens abd execute
+	socket.on('add user', function(username){
+		if(addedUser)return;
+
+		//we store the username in the socket session for this client
+		socket.username = username;
+		addedUser = true;
+		++numUsers;
+		socket.emit('login', {
+			numUsers: numUsers
+		});
+
+
+		//echo globally (all clients) tat a person has connected
+		socket.broadcast.emit('user joined', {
+			username: socket.username,
+			numUsers: numUsers
+		});
+
+	});
+
+
+	//when the  client  emits 'typing', we  broadcast in to  others
+	socket.on('typing',function(){
+		socket.broadcast.emit('typing', {
+			username: socket.username
+		});
+	});
+
+	//when the client  emits 'stop typing', we  broadcast in to  others
+	socket.on('stop typing', function(){
+		socket.broadcast.emit('stop typing', {
+			username: socket.username
+		});
+	});
+
+
+
+	socket.on('disconnect', function(){
+		if(addedUser){
+			--numUsers;
+			//echo globally that this client has left
+			socket.broadcast.emit('user left',{
+				username: socket.username,
+				numUsers: numUsers
+			});
+		}
+	});
+	
 
 }
+
