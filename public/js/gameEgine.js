@@ -38,24 +38,29 @@ var scoreRight = 0;
 var winnerState = false;
 var theWinner;
 
+var startGame = false;
+var playerColor;
+var framesPerScond = 30;
 
 window.onload = function(){
 	console.log(" game loaded !");
 	canvas = document.getElementById('gameCanvas');
 	canvasContext = canvas.getContext('2d');
 	canvasContext.font="30px Arial";
-	var framesPerScond = 30;
-
 	ballX = canvas.width / 2;
 	ballY = canvas.height / 2;
 
-	sockets();
 	
-
+	sockets();
+	loginPage();
+	
+	
 	setInterval(
 		function(){update();render();
 		},1000 / framesPerScond
 	 );
+	
+		
 
 	canvas.addEventListener('mousedown',handleMouseClick);
 
@@ -67,6 +72,33 @@ window.onload = function(){
 		});
 
 }
+
+function loginPage(){
+
+	$(function(){
+		var FADE_TIME = 150; // ms
+ 		var TYPING_TIMER_LENGTH = 400; // ms
+
+ 		// Initialize variables
+  		var $window = $(window);
+ 		var $usercolorInput = $('#colorText'); // Input for player color
+ 		var $loginPage = $('.login.page'); // The login page
+ 	 	var $transparentPage = $('.transparent.page');
+ 	 	$( "#ready" ).click(function() {
+ 	 		startGame = true;
+  			playerColor = '#' + $usercolorInput.val();
+  			console.log('color: ' + playerColor+ 'state: ' + startGame);
+  			socket.emit('player',{});
+  			$loginPage.fadeOut();
+  			$transparentPage.fadeOut();
+  			
+		});
+
+	});
+}
+
+
+
 
 
 function setPlayer(left, id){
@@ -277,7 +309,7 @@ function renderWinerPlayers(){
 
 	if(theWinner == 'LEFT'){
 
-		if(player.left)colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		if(player.left)colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, playerColor);
 
 		for(var i = 0 in players){
 			var otherPlayer = players[i];
@@ -287,7 +319,7 @@ function renderWinerPlayers(){
 		}
 	}else{
 
-		if(!player.left)colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		if(!player.left)colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, playerColor);
 
 		for(var i = 0 in players){
 			var otherPlayer = players[i];
@@ -304,7 +336,7 @@ function renderWinerPlayers(){
 function renderPlayers(){
 
 	if(player != null)
-		colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		colorRect( player.x, player.y, PADDLE_WIDTH, PADDLE_HEIGHT, playerColor);
 
 	for(var i = 0; i < numPlayers; i++){
 		var otherPlayer = players[i];

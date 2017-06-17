@@ -42,6 +42,7 @@ ul {
   margin: 0;
   padding: 0;
   width: 100%;
+
 }
 
 .page {
@@ -53,27 +54,43 @@ ul {
 /* Login Page */
 
 .login.page {
-  background-color: #000;
+  z-index: 1;
+
 }
+
+.transparent.page{
+  background-color: #000;
+  opacity:1;
+  filter:alpha(opacity=100); /* For IE8 and earlier */
+}
+
 
 .login.page .form {
   height: 100px;
   margin-top: -100px;
   position: absolute;
-
   text-align: center;
   top: 50%;
   width: 100%;
+
 }
 
 .login.page .form .usernameInput {
   background-color: transparent;
   border: none;
-  border-bottom: 2px solid #fff;
   outline: none;
-  padding-bottom: 15px;
+  padding-bottom: 11px;
   text-align: center;
+  margin-top: 50px;
   width: 400px;
+  
+  
+}
+
+.circuleDiv{
+  width: 70px;
+  height: 250px;
+  border: none;
 }
 
 .login.page .title {
@@ -98,61 +115,48 @@ ul {
 
 /* Font */
 
-.messages {
-  font-size: 150%;
-}
 
-.inputMessage {
-  font-size: 100%;
-}
-
-.log {
-  color: gray;
-  font-size: 70%;
-  margin: 5px;
-  text-align: center;
-}
 
 /* Messages */
 
-.chatArea {
-  height: 100%;
-  padding-bottom: 60px;
-}
 
-.messages {
-  height: 100%;
-  margin: 0;
-  overflow-y: scroll;
-  padding: 10px 20px 10px 20px;
-}
 
-.message.typing .messageBody {
-  color: gray;
-}
-
-.username {
-  font-weight: 700;
-  overflow: hidden;
-  padding-right: 15px;
-  text-align: right;
-}
 
 /* Input */
 
-.inputMessage {
-  border: 10px solid #000;
-  bottom: 0;
-  height: 60px;
-  left: 50%;
-  outline: none;
-  padding-left: 10px;
-  position: absolute;
-  right: 0;
-  width: 40%;
-}
+
 
 .center{
   position: absolute;
   left: 25%;
+}
+
+
+
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 17px 50px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    outline: none;
+    font-size: 16px;
+    margin: 20px 3px 0px 10px;
+    -webkit-transition-duration: 0.1s; /* Safari */
+    transition-duration: 0.1s;
+    cursor: pointer;
+}
+
+
+.button5 {
+    background-color: white;
+    color: black;
+    border: 2px solid #555555;
+}
+
+.button5:hover {
+    background-color: #555555;
+    color: white;
 }

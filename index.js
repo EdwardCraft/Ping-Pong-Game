@@ -52,17 +52,29 @@ io.on('connection', function(socket){
 
 	
 function pongLogin(socket){
+
 	console.log('Pong logic');
-	numPlayers += 1;
 	facing = !facing;
 
-	if(!startMoving && numPlayers > 1){
-		if(!endGame)startMoving = true;
-	}
 
 
+	
 
-	socket.emit('socketID' , { id: socket.id, left: facing});
+	
+	//
+	socket.on('player', function(data){
+		
+		if(numPlayers == 1){
+			facing = !players[0].left;
+		}
+
+		numPlayers += 1;
+		socket.emit('socketID' , { id: socket.id, left: facing});
+		if(!startMoving && numPlayers > 1){
+			if(!endGame)startMoving = true;
+		}
+
+	})
 	socket.emit('getPlayers', players);
 	socket.broadcast.emit('newPlayer', {id: socket.id, left: facing});
 	socket.on('playerMove', function(data){
@@ -98,8 +110,9 @@ function pongLogin(socket){
 	});
 
 	socket.on('disconnect', function(){
+		if(numPlayers != 0)numPlayers -= 1;
 		console.log('player disconnected :'+ socket.id);
-		numPlayers -= 1;
+		console.log('num players :'+ numPlayers);
 		socket.broadcast.emit('playerDisconnected',{id: socket.id});
 		for(var i = 0; i < players.length ; i++ ){
 			if(players[i] != null){
@@ -118,9 +131,8 @@ function pongLogin(socket){
 	 			players[i] = players[i + 1];
 	 		}
 	 	}
-	 	console.log('array size before: ' + players.length);
 	 	players.length -= 1;
-	 	console.log('array size after: ' + players.length);
+	 	console.log('player array length: ' + players.length);
 	 	emptyArray(players);
 
 
@@ -151,9 +163,8 @@ function pongLogin(socket){
 	});
 
 	
-	PLAYER_SOCKETS.push(socket);
 	players.push(new player(socket.id, 0, 0, facing));
-
+	PLAYER_SOCKETS.push(socket);
 
 }
 
@@ -264,6 +275,7 @@ function update(){
 }
 
 
+
 function ballPosition(){
 	for(var i  = 0; i < PLAYER_SOCKETS.length; i++){
 		var socket = PLAYER_SOCKETS[i];
@@ -290,7 +302,7 @@ function emptyArray(array){
 	if(numPlayers == 0){
 	   	array.length = 0; // good!
 	   	startMoving = false;
-
+	   	endGame = false;
  	}
 
 }
@@ -373,68 +385,4 @@ function restartGame(){
 	
 }
 
-
-function chatLogin(socket){
-	console.log('a user conneted chat');
-	var addedUser = false;
-	
-	socket.on('chat message', function(msg){
-		//io.emit('chat message', msg);
-		socket.broadcast.emit('chat message', {
-			username: socket.username,
-			message: data
-		});
-	});
-
-	//when the client emits 'add user' this listens abd execute
-	socket.on('add user', function(username){
-		if(addedUser)return;
-
-		//we store the username in the socket session for this client
-		socket.username = username;
-		addedUser = true;
-		++numUsers;
-		socket.emit('login', {
-			numUsers: numUsers
-		});
-
-
-		//echo globally (all clients) tat a person has connected
-		socket.broadcast.emit('user joined', {
-			username: socket.username,
-			numUsers: numUsers
-		});
-
-	});
-
-
-	//when the  client  emits 'typing', we  broadcast in to  others
-	socket.on('typing',function(){
-		socket.broadcast.emit('typing', {
-			username: socket.username
-		});
-	});
-
-	//when the client  emits 'stop typing', we  broadcast in to  others
-	socket.on('stop typing', function(){
-		socket.broadcast.emit('stop typing', {
-			username: socket.username
-		});
-	});
-
-
-
-	socket.on('disconnect', function(){
-		if(addedUser){
-			--numUsers;
-			//echo globally that this client has left
-			socket.broadcast.emit('user left',{
-				username: socket.username,
-				numUsers: numUsers
-			});
-		}
-	});
-	
-
-}
 

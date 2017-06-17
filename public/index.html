@@ -5,21 +5,40 @@
 	<title></title>
 	<!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet">
-
+    <script src="js/jscolor.js"></script>
 
 </head>
-<body>
-	
+<body >
 
-		<div class="center"> 
-			<canvas id="gameCanvas" width="800" height="600"></canvas>
+		
+		<div class="pages">
+			
+			<div class="center"> 
+				<canvas id="gameCanvas" width="800" height="600"></canvas>
+			</div>
+			
+			<div class="login page">
+				<div class="form">
+        			<h3 class="title">CHOOSE YOUR COLOR</h3>
+					<input id="colorText" class="jscolor usernameInput " maxlength="0" disabled="disabled" />
+					<button id="ready" class="button button5" width="50px">Ready</button>
+      			</div>
+			</div>
+
+			<div class="transparent page"></div>
+
 		</div>
-			 
+		
+		
 	
 
+	<script>
+		function setTextColor(picker) {
+			return document.getElementsByTagName('body')[0].style.color = '#' + picker.toString();
+		}
 
+	</script>
     
-
     <script src="js/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="js/gameEgine.js"></script>
