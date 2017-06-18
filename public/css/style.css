@@ -25,8 +25,9 @@ html, input {
 
 html, body {
   height: 100%;
-  margin: 0;
-  padding: 0;
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
 }
 
 
@@ -73,6 +74,10 @@ ul {
   top: 50%;
   width: 100%;
 
+}
+
+.game.page{
+  margin: 0px;
 }
 
 .login.page .form .usernameInput {
@@ -160,3 +165,4 @@ ul {
     background-color: #555555;
     color: white;
 }
+

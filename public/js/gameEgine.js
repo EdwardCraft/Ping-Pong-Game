@@ -42,11 +42,19 @@ var startGame = false;
 var playerColor;
 var framesPerScond = 30;
 
+var ctx;
+
 window.onload = function(){
 	console.log(" game loaded !");
 	canvas = document.getElementById('gameCanvas');
 	canvasContext = canvas.getContext('2d');
 	canvasContext.font="30px Arial";
+
+	/*
+	ctx = (canvasContext);
+ 	ctx.canvas.width  = window.innerWidth;
+  	ctx.canvas.height = window.innerHeight;*/
+  	resize();
 	ballX = canvas.width / 2;
 	ballY = canvas.height / 2;
 
@@ -97,20 +105,41 @@ function loginPage(){
 	});
 }
 
+function resize(){
+	//Check for android aspect ratio
+	//our canvas must cover the full  height  of screen 
+	//regardless of the resolution
+	var height =  window.innerHeight;
+	var heightLower = 0;
+	if(height > 1000){
+		heightLower = height + 64;
+ 	}else{
+		heightLower = height;
+	}
+	//So we need to calculate the proper scaled  width
+	//that should work well  width every  resolution 
+	var ratio = canvas.width / canvas.height;
+	var width = heightLower *  ratio;
+
+	canvas.style.width = width+'px';
+	canvas.style.height = height+'px';
+
+}
 
 
-
+window.addEventListener('resize', resize, false);
 
 function setPlayer(left, id){
 	player = new Object(); 
 	player.id = id;
 	player.left = left;
+
 	if(!left){
 		player.x = canvas.width - PADDLE_WIDTH;
-		player.y = playerOnePaddleY;
+		player.y = (canvas.height / 2) - PADDLE_HEIGHT / 2;
 	}else{
 		player.x = 0;
-		player.y = playerOnePaddleY;
+		player.y = (canvas.height / 2) - PADDLE_HEIGHT / 2;
 	}
     
 }
@@ -276,6 +305,7 @@ function winScreen(){
 
 function gameScreen(){
 	//background---
+ 	
 	colorRect( 0, 0, canvas.width, canvas.height, 'black');
 	//-------------
 
