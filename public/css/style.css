@@ -61,8 +61,8 @@ ul {
 
 .transparent.page{
   background-color: #000;
-  opacity:1;
-  filter:alpha(opacity=100); /* For IE8 and earlier */
+  opacity: 80;
+  filter:alpha(opacity=80); /* For IE8 and earlier */
 }
 
 

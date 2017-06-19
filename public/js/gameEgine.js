@@ -109,18 +109,14 @@ function resize(){
 	//Check for android aspect ratio
 	//our canvas must cover the full  height  of screen 
 	//regardless of the resolution
-	var height =  window.innerHeight;
-	var heightLower = 0;
-	if(height > 1000){
-		heightLower = height + 64;
- 	}else{
-		heightLower = height;
-	}
-	//So we need to calculate the proper scaled  width
-	//that should work well  width every  resolution 
-	var ratio = canvas.width / canvas.height;
-	var width = heightLower *  ratio;
+	//var width =  window.innerWidth;
+	var width = $(window).width();
 
+	var height = (canvas.height * width) / canvas.width;
+
+	console.log('width  : ' + width);
+	console.log('height : ' + height);
+	
 	canvas.style.width = width+'px';
 	canvas.style.height = height+'px';
 
