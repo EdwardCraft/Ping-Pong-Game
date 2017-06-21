@@ -43,6 +43,23 @@ var playerColor;
 var framesPerScond = 30;
 
 var ctx;
+var mousePos = 0;
+
+const SOCKET_STATES = { 
+	ID: 0,
+	NEW_PLAYER: 1,
+	GET_PLAYERS: 2,
+	READY: 3,
+	PLAYER_MOVE: 4,
+	PLAYER_DISCONNECT: 5,
+	BALL_MOVE: 6,
+	SCORE_L: 7,
+	SCORE_R: 8,
+	WINNER: 9,
+	SCREEN_RATIO: 10,
+	MOVE: 11
+};
+
 
 window.onload = function(){
 	console.log(" game loaded !");
@@ -74,9 +91,12 @@ window.onload = function(){
 
 	canvas.addEventListener('mousemove',
 		function(evt){
-			var mousePos = calculateMousePos(evt);
-			if(player != null)
-				player.y = mousePos.y - (PADDLE_HEIGHT / 2) ;
+			mousePos = calculateMousePos(evt);
+			if(player != null){
+				socket.emit(SOCKET_STATES.MOVE, { player, mY: mousePos.y });
+			}
+				
+				//player.y = mousePos.y - (PADDLE_HEIGHT / 2) ;
 		});
 
 }
@@ -96,7 +116,7 @@ function loginPage(){
  	 		startGame = true;
   			playerColor = '#' + $usercolorInput.val();
   			console.log('color: ' + playerColor+ 'state: ' + startGame);
-  			socket.emit('player',{});
+  			socket.emit( SOCKET_STATES.READY ,{});
   			$loginPage.fadeOut();
   			$transparentPage.fadeOut();
   			
@@ -161,18 +181,18 @@ function sockets(){
 
 	resetBall();
 
-	socket.emit('canvas dimensions', {width: canvas.width, height: canvas.height});
+	socket.emit( SOCKET_STATES.SCREEN_RATIO, {width: canvas.width, height: canvas.height});
 
-	socket.on('socketID', function(data){
+	socket.on( SOCKET_STATES.ID , function(data){
 		if(data != null){
 			setPlayer(data.left, data.id);
 			console.log("Player id: "+data.id+' left: '+data.left);
 		}
-	}).on('newPlayer',function(data){
+	}).on( SOCKET_STATES.NEW_PLAYER ,function(data){
 		if(data != null){
 			setPlayers(data.left, data.id);
 		}
-	}).on('getPlayers', function(data){
+	}).on( SOCKET_STATES.GET_PLAYERS, function(data){
 		if(data != null){
 			for(var i = 0; i < data.length; i++){
 				var player = new Object(); 
@@ -191,7 +211,7 @@ function sockets(){
 				players[numPlayers++] = player;
 			}
 		}
-	}).on('playerMove',function(data){
+	}).on(SOCKET_STATES.PLAYER_MOVE,function(data){
 		if(data != null){
 			for(var i = 0 in players){
 				if(players[i] != null){
@@ -204,7 +224,7 @@ function sockets(){
 				}
 			}
 		}
-	}).on('playerDisconnected', function(data){
+	}).on( SOCKET_STATES.PLAYER_DISCONNECT, function(data){
 		var id = data.id;
 		for(var i = 0 in players){
 			if(players[i].id == id){
@@ -229,6 +249,11 @@ function sockets(){
 			console.log('players['+i+']: '+players[i].id);
 		}
 
+	}).on(SOCKET_STATES.MOVE, function(data){
+		console.log(' game Position: ' + data.y);
+		//Test 
+		player.y = data.y;
+
 	});
 
 
@@ -239,15 +264,15 @@ function sockets(){
 			ballX = data.x;
 			ballY = data.y;
 		}	
-	}).on('score right', function(data){
+	}).on(SOCKET_STATES.SCORE_R, function(data){
 		if(data != null){
 			scoreRight = data.score;
 		}
-	}).on('score left', function(data){
+	}).on(SOCKET_STATES.SCORE_L, function(data){
 		if(data != null){
 			scoreLeft = data.score;
 		}
-	}).on('winner', function(data){
+	}).on( SOCKET_STATES.WINNER, function(data){
 		if(data != null){
 			winnerState = true;
 			theWinner = data.winer;
@@ -276,8 +301,9 @@ function update(){
 
 
 function updateServer(){
-	if(player != null)
-		socket.emit('playerMove', player);
+	if(player != null){
+		//socket.emit(SOCKET_STATES.PLAYER_MOVE, player);
+	}
 }
 
 
@@ -404,8 +430,6 @@ function calculateMousePos(evt){
 
 
 function resetBall(){
-	velocityX = -velocityX;
-	seconds = TIMER_MOVE_BALL;
 	ballX = canvas.width / 2;
 	ballY = canvas.height / 2;
 

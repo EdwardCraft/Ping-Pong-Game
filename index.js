@@ -6,11 +6,12 @@ var port = process.env.PORT || 3000;
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 10;
-const WIN_SCORE = 100;
+const WIN_SCORE = 10;
+const PLAYERS_TO_START_GAME = 1;
 
 var framesPerScond = 30;
-var velocityX = 10;
-var velocityY = 5;
+var velocityX = 15;
+var velocityY = 10;
 
 var ballX;
 var ballY;
@@ -31,6 +32,22 @@ var facing = false;
 var scoreLeft = 0;
 var scoreRight = 0;
 var endGame = false;
+
+const SOCKET_STATES = { 
+	ID: 0,
+	NEW_PLAYER: 1,
+	GET_PLAYERS: 2,
+	READY: 3,
+	PLAYER_MOVE: 4,
+	PLAYER_DISCONNECT: 5,
+	BALL_MOVE: 6,
+	SCORE_L: 7,
+	SCORE_R: 8,
+	WINNER: 9,
+	SCREEN_RATIO: 10,
+	MOVE: 11
+};
+
 
 
 server.listen(port, function(){
@@ -61,25 +78,56 @@ function pongLogin(socket){
 	
 
 	
-	//
-	socket.on('player', function(data){
+	
+	socket.on( SOCKET_STATES.READY, function(data){
 		
 		if(numPlayers == 1){
 			facing = !players[0].left;
 		}
 
 		numPlayers += 1;
-		socket.emit('socketID' , { id: socket.id, left: facing});
+		socket.emit( SOCKET_STATES.ID, { id: socket.id, left: facing});
 		if(!startMoving && numPlayers > 1){
 			if(!endGame)startMoving = true;
 		}
 
-	})
-	socket.emit('getPlayers', players);
-	socket.broadcast.emit('newPlayer', {id: socket.id, left: facing});
-	socket.on('playerMove', function(data){
+	});
+
+	socket.emit( SOCKET_STATES.GET_PLAYERS, players);
+
+	socket.broadcast.emit( SOCKET_STATES.NEW_PLAYER , {id: socket.id, left: facing});
+
+
+	socket.on( SOCKET_STATES.MOVE, function(data){
+		/*
+		console.log('move y    : ' + data.mY);
+		console.log('player id : ' + data.player.id);
+		console.log('player x  : ' + data.player.x);
+		console.log('player y  : ' + data.player.y);*/
+		for(var i = 0; i < players.length; i++){
+			if(players[i] !== null){
+				if(players[i].id === data.player.id){
+					players[i].y = data.mY - (PADDLE_HEIGHT / 2);
+					players[i].x = data.player.x;
+					socket.emit(SOCKET_STATES.MOVE, players[i] );
+					socket.broadcast.emit(SOCKET_STATES.PLAYER_MOVE, players[i]);
+					break;
+				}
+			}
+		}
+
+	});
+
+
+
+
+
+	/*socket.on( SOCKET_STATES.PLAYER_MOVE, function(data){
 		data.id = socket.id;
-		socket.broadcast.emit('playerMove', data);
+		socket.broadcast.emit( SOCKET_STATES.PLAYER_MOVE, data);
+		//data.mY = data.mY - (PADDLE_HEIGHT / 2);
+		//console.log('new Position: ' + data.mY);
+		//socket.emit( SOCKET_STATES.MOVE, {y: data.mY});
 		for(var i = 0; i < players.length; i++){
 			if(players[i] != null)
 				if(players[i].id == data.id){
@@ -87,14 +135,17 @@ function pongLogin(socket){
 					players[i].y = data.y;
 				}
 		}
-	});
+	});*/
+	
+	
+		
 
 	socket.on('start ball position', function(data){
 		ballX = data.ballX;
 		ballY = data.ballY;
 	});
 
-	socket.on('canvas dimensions', function(data){
+	socket.on( SOCKET_STATES.SCREEN_RATIO, function(data){
 		canvasWidth = data.width;
 		canvasHeight = data.height;
 	});
@@ -113,7 +164,7 @@ function pongLogin(socket){
 		if(numPlayers != 0)numPlayers -= 1;
 		console.log('player disconnected :'+ socket.id);
 		console.log('num players :'+ numPlayers);
-		socket.broadcast.emit('playerDisconnected',{id: socket.id});
+		socket.broadcast.emit( SOCKET_STATES.PLAYER_DISCONNECT,{id: socket.id});
 		for(var i = 0; i < players.length ; i++ ){
 			if(players[i] != null){
 				if(players[i].id == socket.id){
@@ -132,7 +183,7 @@ function pongLogin(socket){
 	 		}
 	 	}
 	 	players.length -= 1;
-	 	console.log('player array length: ' + players.length);
+	 	console.log('player array 	: ' + players.length);
 	 	emptyArray(players);
 
 
@@ -186,7 +237,7 @@ function update(){
 		if(endGame)restartGame();
 		if(!startMoving)return;
 
-		if(numPlayers > 1){
+		if(numPlayers > PLAYERS_TO_START_GAME){
 			ballX += velocityX;
 			ballY += velocityY;
 		}
@@ -214,7 +265,7 @@ function update(){
 				for(var i = 0; i < PLAYER_SOCKETS.length; i++){
 					var socket = PLAYER_SOCKETS[i];
 					if(socket != null)
-						socket.emit('score right',{score: scoreRight});
+						socket.emit(SOCKET_STATES.SCORE_R,{score: scoreRight});
 				}
 
 				resetBall();
@@ -246,7 +297,7 @@ function update(){
 				for(var i = 0; i < PLAYER_SOCKETS.length; i++){
 					var socket = PLAYER_SOCKETS[i];
 					if(socket != null)
-						socket.emit('score left',{score: scoreLeft});
+						socket.emit(SOCKET_STATES.SCORE_L,{score: scoreLeft});
 				}
 				
 				resetBall();
@@ -334,13 +385,13 @@ function checkWinner(){
 			for(var i = 0; i < PLAYER_SOCKETS.length; i++){
 					var socket = PLAYER_SOCKETS[i];
 					if(socket != null)
-						socket.emit('winner',{winer: 'LEFT'});
+						socket.emit( SOCKET_STATES.WINNER,{winer: 'LEFT'});
 			}
 		}else{
 			for(var i = 0; i < PLAYER_SOCKETS.length; i++){
 					var socket = PLAYER_SOCKETS[i];
 					if(socket != null)
-						socket.emit('winner',{winer: 'RIGHT'});
+						socket.emit( SOCKET_STATES.WINNER,{winer: 'RIGHT'});
 			}
 		}	
 
@@ -350,8 +401,8 @@ function checkWinner(){
 		for(var i = 0; i < PLAYER_SOCKETS.length; i++){
 			var socket = PLAYER_SOCKETS[i];
 			if(socket != null){
-				socket.emit('score right',{score: scoreRight});
-				socket.emit('score left',{score: scoreLeft});
+				socket.emit(SOCKET_STATES.SCORE_R,{score: scoreRight});
+				socket.emit(SOCKET_STATES.SCORE_L,{score: scoreLeft});
 			}
 		}
 
