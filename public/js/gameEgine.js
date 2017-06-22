@@ -94,7 +94,7 @@ window.onload = function(){
 			mousePos = calculateMousePos(evt);
 			if(player != null){
 				socket.emit(SOCKET_STATES.MOVE, { player, mY: mousePos.y });
-				player.y = mousePos.y - (PADDLE_HEIGHT / 2);
+				//player.y = mousePos.y - (PADDLE_HEIGHT / 2);
 			}
 				
 				
