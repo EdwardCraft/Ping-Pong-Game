@@ -162,8 +162,8 @@ function pongLogin(socket){
 
 	socket.on('disconnect', function(){
 		if(numPlayers != 0)numPlayers -= 1;
-		console.log('player disconnected :'+ socket.id);
-		console.log('num players :'+ numPlayers);
+		//console.log('player disconnected :'+ socket.id);
+		//console.log('num players :'+ numPlayers);
 		socket.broadcast.emit( SOCKET_STATES.PLAYER_DISCONNECT,{id: socket.id});
 		for(var i = 0; i < players.length ; i++ ){
 			if(players[i] != null){
@@ -183,7 +183,7 @@ function pongLogin(socket){
 	 		}
 	 	}
 	 	players.length -= 1;
-	 	console.log('player array 	: ' + players.length);
+	 	//console.log('player array 	: ' + players.length);
 	 	emptyArray(players);
 
 
@@ -248,7 +248,7 @@ function update(){
 				if(players[i] != null){
 					if(players[i].left){
 						if(collisionPaddle(players[i].y)){
-							console.log('Player id: ' + players[i].id + 'hit padele');
+							//console.log('Player id: ' + players[i].id + 'hit padele');
 							hit = true;
 							velocityX = -velocityX;
 							var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));
@@ -280,7 +280,7 @@ function update(){
 				if(players[i] != null){
 					if(!players[i].left){
 						if(collisionPaddle(players[i].y)){
-							console.log('Player id: ' + players[i].id + 'hit padele');
+							//console.log('Player id: ' + players[i].id + 'hit padele');
 							hit = true;
 							velocityX = -velocityX;
 							var deltaY = ballY - (players[i].y + (PADDLE_HEIGHT / 2));

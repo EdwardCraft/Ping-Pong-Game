@@ -78,6 +78,7 @@ ul {
 
 .game.page{
   margin: 0px;
+  
 }
 
 .login.page .form .usernameInput {
@@ -116,6 +117,10 @@ ul {
 
 .chat.page {
   display: none;
+}
+
+#gameCanvas{
+  overflow:scroll;
 }
 
 /* Font */

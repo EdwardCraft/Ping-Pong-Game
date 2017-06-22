@@ -94,9 +94,10 @@ window.onload = function(){
 			mousePos = calculateMousePos(evt);
 			if(player != null){
 				socket.emit(SOCKET_STATES.MOVE, { player, mY: mousePos.y });
+				player.y = mousePos.y - (PADDLE_HEIGHT / 2);
 			}
 				
-				//player.y = mousePos.y - (PADDLE_HEIGHT / 2) ;
+				
 		});
 
 }
@@ -134,11 +135,12 @@ function resize(){
 
 	var height = (canvas.height * width) / canvas.width;
 
-	console.log('width  : ' + width);
-	console.log('height : ' + height);
+	//console.log('width  : ' + width);
+	//console.log('height : ' + height);
 	
 	canvas.style.width = width+'px';
 	canvas.style.height = height+'px';
+
 
 }
 
@@ -250,7 +252,6 @@ function sockets(){
 		}
 
 	}).on(SOCKET_STATES.MOVE, function(data){
-		console.log(' game Position: ' + data.y);
 		//Test 
 		player.y = data.y;
 
@@ -416,10 +417,17 @@ function colorRect(leftX, topY, width, height, color){
 
 
 function calculateMousePos(evt){
+
 	var rect = canvas.getBoundingClientRect();
-	var root = document.documentElement;
-	var mouseX = evt.clientX - rect.left - root.scrollLeft;
-	var mouseY = evt.clientY - rect.top - root.scrollTop;
+	var rectLeft = rect.left;
+    var rectTop = rect.top;
+
+	var scaleX = canvas.width / canvas.offsetWidth;
+	var scaleY = canvas.height / canvas.offsetHeight;
+
+
+	var mouseX = (evt.clientX - rectLeft) * scaleX;
+	var mouseY = (evt.clientY - rectTop) * scaleY;
 
 	return{
 		x:mouseX,
@@ -455,5 +463,8 @@ function ballPauseMovement(){
 		return startMovementBall = false;
 	}
 	
-
 }
+
+
+
+
